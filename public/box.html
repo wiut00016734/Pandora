@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pandora Box</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0a0a0f;--surface:#111118;--surface2:#1a1a24;--border:#2a2a3a;--accent:#7fff6e;--accent2:#4de0ff;--danger:#ff4e6a;--text:#e8e8f0;--muted:#6b6b80;--mono:'Space Mono',monospace;--display:'Syne',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--display);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(127,255,110,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(127,255,110,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;}
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 36px;border-bottom:1px solid var(--border);background:rgba(10,10,15,.85);backdrop-filter:blur(10px);}
+.logo{font-weight:800;font-size:1.3rem;letter-spacing:-.5px;display:flex;align-items:center;gap:8px;}
+.logo-icon{width:26px;height:26px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;}
+.logo span{color:var(--accent);}
+.view-badge{font-family:var(--mono);font-size:.62rem;padding:4px 12px;border-radius:20px;border:1px solid rgba(127,255,110,.3);color:var(--accent);}
+.view-badge.sub{border-color:rgba(77,224,255,.3);color:var(--accent2);}
+
+main{max-width:860px;margin:0 auto;padding:36px 20px;}
+.box-hdr{margin-bottom:28px;}
+.box-hdr h1{font-size:1.8rem;font-weight:800;margin-bottom:4px;}
+.box-hdr p{font-family:var(--mono);font-size:.68rem;color:var(--muted);}
+
+/* Submission zone */
+.sub-zone{border:2px dashed var(--border);border-radius:10px;padding:36px 20px;text-align:center;cursor:pointer;transition:all .3s;margin-bottom:28px;}
+.sub-zone:hover,.sub-zone.drag{border-color:var(--accent2);background:rgba(77,224,255,.02);}
+.sub-zone h3{font-size:.95rem;font-weight:600;margin:8px 0 5px;}
+.sub-zone p{font-family:var(--mono);font-size:.68rem;color:var(--muted);}
+.prog{display:none;margin-top:12px;}
+.prog-bg{height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--accent2);border-radius:2px;width:0%;transition:width .25s;}
+.prog-lbl{font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-top:5px;}
+#sub-input{display:none;}
+
+.section-ttl{font-family:var(--mono);font-size:.62rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.section-ttl::after{content:'';flex:1;height:1px;background:var(--border);}
+.files-list{display:flex;flex-direction:column;gap:10px;}
+.file-row{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px 18px;display:flex;align-items:center;gap:14px;transition:all .2s;}
+.file-row:hover{border-color:rgba(127,255,110,.3);}
+.f-icon{font-size:1.5rem;flex-shrink:0;}
+.f-info{flex:1;min-width:0;}
+.f-name{font-size:.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.f-meta{font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-top:3px;}
+.dl-btn{font-family:var(--mono);font-size:.65rem;font-weight:700;color:var(--bg);background:var(--accent);border:none;padding:9px 18px;border-radius:4px;cursor:pointer;letter-spacing:.5px;text-transform:uppercase;transition:all .2s;white-space:nowrap;flex-shrink:0;}
+.dl-btn:hover{background:#a0ffaa;transform:translateY(-1px);}
+.empty{text-align:center;padding:50px 20px;color:var(--muted);font-family:var(--mono);font-size:.76rem;}
+.empty span{font-size:2.5rem;display:block;margin-bottom:12px;}
+.loading{text-align:center;padding:60px;font-family:var(--mono);font-size:.76rem;color:var(--muted);}
+.error-box{text-align:center;padding:60px 20px;}
+.error-box h2{font-size:1.4rem;font-weight:800;margin-bottom:8px;}
+.error-box p{font-family:var(--mono);font-size:.72rem;color:var(--muted);}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--surface2);border:1px solid var(--accent);color:var(--accent);font-family:var(--mono);font-size:.68rem;padding:9px 18px;border-radius:6px;opacity:0;transition:all .3s;pointer-events:none;z-index:300;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo"><div class="logo-icon">🔒</div>Pan<span>dora</span></div>
+  <div class="view-badge" id="mode-badge">View Only</div>
+</nav>
+
+<main>
+  <div id="loading" class="loading">Loading box…</div>
+  <div id="error-view" class="error-box" style="display:none">
+    <h2>Box not found</h2>
+    <p>This box may have expired or the link is incorrect.</p>
+  </div>
+  <div id="box-view" style="display:none">
+    <div class="box-hdr">
+      <h1 id="box-title">Pandora Box</h1>
+      <p id="box-meta"></p>
+    </div>
+
+    <!-- Submission zone (shown only if submission_mode=true) -->
+    <div class="sub-zone" id="sub-zone" style="display:none" onclick="document.getElementById('sub-input').click()">
+      <span>📤</span>
+      <h3>Submit a file anonymously</h3>
+      <p>Your identity is not recorded. Drop a file or click to choose.</p>
+      <div class="prog" id="sub-prog">
+        <div class="prog-bg"><div class="prog-fill" id="sub-fill"></div></div>
+        <div class="prog-lbl" id="sub-lbl"></div>
+      </div>
+    </div>
+    <input type="file" id="sub-input" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp"/>
+
+    <div class="section-ttl">Files</div>
+    <div class="files-list" id="files-list">
+      <div class="empty" id="empty"><span>🗄️</span>No files have been shared yet.</div>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const boxId = window.location.pathname.split('/').pop();
+
+async function load() {
+  try {
+    const res = await fetch(`/api/boxes/${boxId}/public`);
+    const data = await res.json();
+    document.getElementById('loading').style.display = 'none';
+    if (!data.success) { document.getElementById('error-view').style.display='block'; return; }
+    render(data.box, data.files);
+  } catch(e) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error-view').style.display = 'block';
+  }
+}
+
+function render(box, files) {
+  document.getElementById('box-view').style.display = 'block';
+  document.getElementById('box-title').textContent = box.label || 'Pandora Box';
+  document.getElementById('box-meta').textContent =
+    `${files.length} file${files.length!==1?'s':''} · Created ${new Date(box.created_at).toLocaleDateString()}`;
+  document.title = (box.label || 'Pandora Box') + ' — Pandora';
+
+  if (box.submission_mode) {
+    document.getElementById('sub-zone').style.display = 'block';
+    document.getElementById('mode-badge').textContent = 'Submission Mode';
+    document.getElementById('mode-badge').classList.add('sub');
+    setupSubmission(box.id);
+  }
+
+  const list = document.getElementById('files-list');
+  const empty = document.getElementById('empty');
+  list.querySelectorAll('.file-row').forEach(r=>r.remove());
+
+  if (!files.length) { empty.style.display='block'; return; }
+  empty.style.display = 'none';
+
+  files.forEach(f => {
+    const row = document.createElement('div');
+    row.className = 'file-row';
+    const days = Math.max(0, Math.ceil((new Date(f.expires_at)-new Date())/86400000));
+    row.innerHTML = `
+      <span class="f-icon">${fileIcon(f.mime_type, f.original_name)}</span>
+      <div class="f-info">
+        <div class="f-name">${f.original_name}</div>
+        <div class="f-meta">${fmtSize(f.size_bytes)} · ${f.download_count||0} downloads · expires in ${days}d</div>
+      </div>
+      <button class="dl-btn" onclick="window.open('/api/files/${f.id}/download','_blank')">Download</button>`;
+    list.appendChild(row);
+  });
+}
+
+function setupSubmission(boxId) {
+  const input = document.getElementById('sub-input');
+  const zone = document.getElementById('sub-zone');
+  zone.addEventListener('dragover', e=>{e.preventDefault();zone.classList.add('drag');});
+  zone.addEventListener('dragleave',()=>zone.classList.remove('drag'));
+  zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag');if(e.dataTransfer.files[0])doUpload(boxId,e.dataTransfer.files[0]);});
+  input.addEventListener('change',()=>{if(input.files[0])doUpload(boxId,input.files[0]);input.value='';});
+}
+
+async function doUpload(boxId, file) {
+  const prog = document.getElementById('sub-prog');
+  const fill = document.getElementById('sub-fill');
+  const lbl = document.getElementById('sub-lbl');
+  prog.style.display='block'; fill.style.width='10%'; lbl.textContent=`Uploading ${file.name}…`;
+  const form = new FormData();
+  form.append('file', file);
+  form.append('box_id', boxId);
+  let p = 10;
+  const tick = setInterval(()=>{p=Math.min(p+Math.random()*15,85);fill.style.width=p+'%';},200);
+  try {
+    const res = await fetch('/api/files/upload',{method:'POST',body:form});
+    clearInterval(tick); fill.style.width='100%';
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    lbl.textContent='Submitted!';
+    toast('File submitted anonymously ✓');
+    setTimeout(()=>{prog.style.display='none';fill.style.width='0%';load();},1000);
+  } catch(e) {
+    clearInterval(tick); prog.style.display='none';
+    toast('Upload failed: '+e.message);
+  }
+}
+
+function fileIcon(mime,name){
+  if(mime.startsWith('image/')) return '🖼️';
+  if(mime==='application/pdf') return '📄';
+  if(name.match(/\.(ppt|pptx)$/i)) return '📊';
+  if(name.match(/\.(doc|docx)$/i)) return '📝';
+  if(name.match(/\.(xls|xlsx)$/i)) return '📋';
+  return '📁';
+}
+function fmtSize(b){
+  if(b<1024) return b+' B';
+  if(b<1048576) return (b/1024).toFixed(1)+' KB';
+  return (b/1048576).toFixed(1)+' MB';
+}
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+load();
+</script>
+</body>
+</html>
