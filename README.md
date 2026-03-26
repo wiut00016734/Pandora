@@ -62,17 +62,3 @@ pandora/
 | DELETE | `/api/boxes/:id/files/:fileId` | Delete a file                             |
 | POST   | `/api/files/upload`            | Upload a file to a box                    |
 | GET    | `/api/files/:id/download`      | Download a file (redirects to signed URL) |
-
----
-
-## Deployment (optional)
-
-To deploy to the web, push to **Railway**, **Render**, or **Fly.io**:
-
-1. Create a new project on Railway (railway.app)
-2. Connect your GitHub repo
-3. Add your `.env` variables in the Railway dashboard
-4. Deploy — Railway auto-detects Node.js
-
-Your Supabase database and storage are already in the cloud,
-so only the Node.js server needs deploying.
