@@ -36,7 +36,7 @@ student submission mode, and 7-day auto-expiry.
 ```
 pandora/
 ├── server.js              # Express app entry point
-├── .env                   # Your Supabase credentials (DO NOT COMMIT)
+├── .env                   # Supabase credentials
 ├── package.json
 ├── lib/
 │   ├── supabase.js        # Supabase client

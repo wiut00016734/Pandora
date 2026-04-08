@@ -20,9 +20,9 @@ app.use('/api/boxes', boxesRouter);
 app.use('/api/files', filesRouter);
 
 // ── Frontend Routes ──
-// Box viewer page (public, no key needed)
+// Box viewer page — now served by index.html (full UI with sidebar)
 app.get('/box/:id', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'box.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // All other routes → main app
